@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Productos</title>
+    <style>
+        body { font-family: sans-serif; display: flex; gap: 20px; padding: 20px; background: #f9f9f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 400px; }
+        .producto-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; }
+        img { width: 100%; border-radius: 8px; margin-bottom: 15px; }
+        button { cursor: pointer; margin: 5px 0; padding: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="img/jeans.jpg" alt="Producto ilustrativo">
+        <h2>🛍️ Mis Productos</h2>
+        <button onclick="cargarProductos()">LISTA DE ARTICULOS</button>
+        <div id="controles-orden" style="display:none;">
+            <button onclick="ordenar('nombre')">Ordenar por Nombre</button>
+            <button onclick="ordenar('precio')">Ordenar por Precio</button>
+        </div>
+        <div id="lista-productos"></div>
+    </div>
+
+    <div class="card">
+        <h2>➕ Agregar Producto</h2>
+        <input type="text" id="nombre" placeholder="Nombre del producto"><br><br>
+        <input type="number" id="precio" placeholder="Precio"><br><br>
+        <button onclick="agregarProducto()">AGREGAR NUEVO PRODUCTO</button>
+    </div>
+
+    <script>
+        let productosLocales = [];
+
+        async function cargarProductos() {
+            const res = await fetch('http://localhost:3000');
+            productosLocales = await res.json();
+            document.getElementById('controles-orden').style.display = 'block';
+            renderizar();
+        }
+
+        function renderizar() {
+            const lista = document.getElementById('lista-productos');
+            lista.innerHTML = productosLocales.map(p => `
+                <div class="producto-item">
+                    <span><strong>${p.nombre}</strong></span>
+                    <span>$${p.precio}</span>
+                </div>
+            `).join('');
+        }
+
+        function ordenar(criterio) {
+            productosLocales.sort((a, b) => {
+                if (criterio === 'precio') return a.precio - b.precio;
+                return a.nombre.localeCompare(b.nombre);
+            });
+            renderizar();
+        }
+
+        async function agregarProducto() {
+            const nombre = document.getElementById('nombre').value;
+            const precio = document.getElementById('precio').value;
+
+            const res = await fetch('http://localhost:3000', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, precio })
+            });
+
+            if (res.ok) {
+                alert("Producto guardado!");
+                cargarProductos();
+            }
+        }
+    </script>
+</body>
+</html>
